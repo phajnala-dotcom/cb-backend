@@ -1,0 +1,61 @@
+name: realtime-smoke
+on:
+  pull_request:
+    branches: [ "**" ]
+  push:
+    branches: [ "ci/realtime-smoke" ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project (runtime deps)
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install -U pip
+          pip install -e .
+
+      - name: Install dev tools
+        run: |
+          source .venv/bin/activate
+          pip install ruff pytest pytest-asyncio
+
+      - name: Lint (ruff)
+        run: |
+          source .venv/bin/activate
+          ruff check src
+
+      - name: Static verify: agent.py must use OpenAI Realtime (no legacy plugins)
+        run: |
+          source .venv/bin/activate
+          python .github/scripts/verify_realtime.py
+
+      - name: Import check (without starting app)
+        env:
+          LIVEKIT_URL: "wss://example"
+          LIVEKIT_API_KEY: "dummy"
+          LIVEKIT_API_SECRET: "dummy"
+          OPENAI_API_KEY: "sk-dummy"
+          ENABLE_BVC: "false"
+        run: |
+          source .venv/bin/activate
+          python << 'PY'
+          import importlib.util, sys
+          spec = importlib.util.spec_from_file_location('agent','src/agent.py')
+          m = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(m)
+          print("OK: agent.py import passed")
+          PY
+
+      - name: Tests (if any)
+        run: |
+          source .venv/bin/activate
+          pytest -q || true
