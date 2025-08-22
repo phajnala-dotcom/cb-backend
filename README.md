@@ -106,6 +106,19 @@ Once you've started your own project based on this repo, you should:
 
 This project is production-ready and includes a working `Dockerfile`. To deploy it to LiveKit Cloud or another environment, see the [deploying to production](https://docs.livekit.io/agents/ops/deployment/) guide.
 
+## Testovanie (Realtime)
+
+**Predpoklady:** Python tri bod desať alebo novší, platné LIVEKIT a OPENAI kľúče.
+
+### Lokálne (uv – odporúčané)
+```bash
+uv venv
+uv sync
+cp .env.example .env
+# vyplň LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET, OPENAI_API_KEY
+uv run python src/agent.py
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
